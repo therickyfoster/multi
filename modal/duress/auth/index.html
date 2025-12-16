@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Multimodal Duress Auth — Proposal</title>
+<style>
+:root{--bg:#05060a;--card:#0b1020;--muted:#9aa4c0;--accent:#6be6c1}
+html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:radial-gradient(ellipse at 20% 10%, rgba(107,230,193,0.05), transparent 10%), radial-gradient(ellipse at 80% 90%, rgba(107,230,193,0.03), transparent 10%), var(--bg);color:#e6eef8}
+.header{padding:28px 32px;display:flex;gap:20px;align-items:center}
+.logo{width:84px;height:84px;border-radius:14px;background:linear-gradient(135deg,#073642,#045a4b);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent);box-shadow:0 6px 30px rgba(0,0,0,0.6)}
+.title{font-size:20px;font-weight:700}
+.subtitle{color:var(--muted);font-size:13px}
+.container{max-width:1100px;margin:18px auto;padding:18px}
+.grid{display:grid;grid-template-columns:1fr 420px;gap:18px}
+.card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.03);padding:18px;border-radius:12px}
+.h2{font-size:16px;margin:6px 0 12px}
+.kv{display:flex;gap:8px;align-items:flex-start}
+.code{background:#071025;padding:12px;border-radius:8px;font-family:SFMono-Regular,Menlo,Monaco,monospace;color:#9fe8d0;overflow:auto;max-height:220px}
+.small{font-size:13px;color:var(--muted)}
+.footer{font-size:12px;color:var(--muted);text-align:center;padding:18px}
+/* parallax stars */
+.scene{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.star{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;opacity:.9;filter:blur(.3px);}
+.button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 12px;border-radius:8px;color:var(--accent);cursor:pointer}
+.action-list{display:flex;flex-direction:column;gap:8px}
+.preview{background:linear-gradient(90deg, rgba(11,16,32,0.4), rgba(7,12,22,0.6));padding:12px;border-radius:8px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="scene" id="scene"></div>
+<header class="header card" style="position:relative;z-index:2">
+  <div class="logo">MD</div>
+  <div>
+    <div class="title">Multimodal Duress Authentication (MD Auth)</div>
+    <div class="subtitle">A proposal & demo: polymodal cues, duress workflows, tamper-evidence, guardian escrow, and auditable anchors</div>
+  </div>
+</header>
+<main class="container" style="position:relative;z-index:2">
+  <div class="grid">
+    <section class="card">
+      <h3 class="h2">Executive summary</h3>
+      <p class="small">MD Auth is a user‑centric polymodal authentication & duress system that converts audible cues, typing rhythms, gestures, sensor inputs, and interaction patterns into fused cryptographic keys and trigger signals. It preserves privacy by keeping raw biometric/ambient data local, protects integrity with hardware-backed key storage and signed manifests, and empowers users with configurable duress actions (silent alerts, quarantine, decoy vaults, and secure wipe). All critical events are logged in an append-only signed chain and can be anchored to IPFS/Arweave for immutable audit timelines.</p>
+
+      <h4 class="h2">Why this matters</h4>
+      <ul class="small">
+        <li>Protects people under coercion/extortion with reversible or irreversible lockout paths.</li>
+        <li>Raises the cost of spoofing via nonce-based challenge–response and liveness checks.</li>
+        <li>Aligns with transparency: tamper‑evidence via signed manifests and archived anchors.</li>
+      </ul>
+
+      <h4 class="h2">Core capabilities</h4>
+      <div class="small">
+        • Enrollment & template management (multi-session)
+        <br>• Fusion KDF: Argon2id over normalized multimodal feature vectors + nonce
+        <br>• Configurable cue-profiles (swap & hide cues)
+        <br>• Duress action mappings (silent alert, quarantine, decoy, wipe)
+        <br>• Append-only signed log + periodic IPFS/Arweave anchoring
+      </div>
+
+      <h4 class="h2">Threat model highlights</h4>
+      <div class="small">
+        Defends: credential theft, replay, device compromise, coercion. Does not provide covert backdoors or bypass official 2FA; instead it augments legitimate auth and emergency workflows.
+      </div>
+
+      <h4 class="h2">Quick implementation checklist</h4>
+      <ol class="small">
+        <li>Implement local feature extractors (MFCC for audio, keystroke timing, gesture resample)</li>
+        <li>Protect master keys with TPM/SE & FIDO2 where possible</li>
+        <li>Sign releases, generate signed manifests, support reproducible builds</li>
+        <li>Provide guardian onboarding & sealed payload key exchange</li>
+        <li>Build UI for cue swapping and safe duress testing</li>
+      </ol>
+
+      <div style="margin-top:14px">
+        <button class="button" onclick="showSample()">View sample cue-profile JSON</button>
+      </div>
+
+      <div id="sample" style="margin-top:12px;display:none">
+        <pre class="code">{
+  "profiles": {
+    "default": {
+      "description": "Primary login + duress",
+      "cues": [
+        {"id":"hum_rapture","type":"audio","mode":"active","threshold":0.82,"actions":["silent_alert_low"]},
+        {"id":"panic_tap","type":"tap_pattern","pattern":"tap,tap,hold,tap","mode":"passive","actions":["wipe_local_shares","notify_guardian"]}
+      ],
+      "guardians":[{"name":"Ricky","contact":"https://hooks.example/guardian/abc","pubkey":"ed25519:..."}],
+      "active":true
+    }
+  }
+}
+        </pre>
+      </div>
+
+    </section>
+
+    <aside class="card">
+      <h3 class="h2">Interactive demo (mock)</h3>
+      <div class="preview">
+        <div class="small">Simulate a cue event to see mapped actions and the signed log entry that would be produced (mock signatures).</div>
+        <div style="height:12px"></div>
+        <div class="action-list">
+          <button class="button" onclick="simulate('silent')">Simulate: Silent alert</button>
+          <button class="button" onclick="simulate('wipe')">Simulate: Wipe local shares</button>
+          <button class="button" onclick="simulate('decoy')">Simulate: Present decoy vault</button>
+        </div>
+        <div style="height:10px"></div>
+        <div id="logOut" class="code" style="font-size:12px">// event log will appear here</div>
+      </div>
+
+      <h4 class="h2" style="margin-top:12px">Actions reference</h4>
+      <div class="small">
+        <b>silent_alert_low</b>: encrypt minimal event to guardians, store signed local log.<br>
+        <b>wipe_local_shares</b>: securely erase local shares and mark vault disabled (irreversible if no recovery shares).<br>
+        <b>decoy_vault</b>: unlock limited dataset as plausible output for coercer.
+      </div>
+
+    </aside>
+  </div>
+
+  <section class="card" style="margin-top:18px">
+    <h3 class="h2">Detailed sections</h3>
+    <h4 class="small">Enrollment & templates</h4>
+    <p class="small">Enroll over multiple sessions. Store hashed/fingerprint templates (not raw audio). Use per-template salt and sign a manifest that lists template hashes and parameters. Publish manifest hash to IPFS/Arweave to create an immutable anchor for future audits.</p>
+
+    <h4 class="small">Fusion KDF (concrete)</h4>
+    <p class="small">Construct X = salt || nonce || compress(F_audio) || compress(F_keys) || compress(F_gesture). Compute derived_key = Argon2id(X, params). Use derived_key either to HMAC(nonce) for server auth or to unwrap a sealed device key for further operations. Always include nonce to prevent replay.</p>
+
+    <h4 class="small">Duress & escalation patterns</h4>
+    <p class="small">Support 4 graded templates: <b>inform</b> (logged + low alert), <b>protect</b> (lock/require secondary), <b>decoy</b> (plausible output), <b>self-destruct</b> (erase). Allow guardian quorum for irreversible actions across devices.</p>
+
+    <h4 class="small">Tamper evidence & audit</h4>
+    <p class="small">Log entries linked by prev_hash and signed by device key (TPM). Periodically anchor head hash and save anchor id locally & to guardians. This prevents retroactive rewriting and provides verifiable history for investigators or auditors.</p>
+
+    <h4 class="small">Privacy & legal notes</h4>
+    <p class="small">Raw biometric/ambient data must remain local and encrypted. Any networked alerts should send minimal metadata by default. Provide clear permissions UI. Consult a lawyer for automatic escalation to authorities; require explicit consent and jurisdiction-aware policies.</p>
+
+    <h4 class="small">Licensing suggestion</h4>
+    <p class="small">If you want permissive reuse, Apache-2.0 (Afero-compatible). If you want network-copyleft for server deployments, AGPLv3. Include clear 'zero-harm' & privacy clauses in contributor guide.</p>
+
+    <div style="height:12px"></div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="button" onclick="downloadHTML()">Download index.html</button>
+      <div class="small">This file is standalone — drop it on any machine and open in a browser.</div>
+    </div>
+  </section>
+
+</main>
+<footer class="footer">Made with strange love for resilient safety — Foster + Navi style. ⚡️</footer>
+
+<script>
+// simple starfield
+const scene = document.getElementById('scene');
+for(let i=0;i<120;i++){const s=document.createElement('div');s.className='star';s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';s.style.opacity=(0.3+Math.random()*0.9);s.style.transform='scale('+(0.3+Math.random()*1.6)+')';scene.appendChild(s)}
+
+function showSample(){document.getElementById('sample').style.display='block'}
+
+function simulate(type){
+  const now = new Date().toISOString();
+  const entry = {
+    ts: now,
+    profile: 'default',
+    rule: type==='silent'?'hum_rapture':(type==='wipe'?'panic_tap':'decoy_cmd'),
+    inputs_hash: 'sha256:mock-'+Math.random().toString(36).slice(2,9),
+    actions: type==='silent'?['silent_alert_low']:type==='wipe'?['wipe_local_shares','notify_guardian']:['decoy_vault'],
+    result: 'executed',
+    prev: 'sha256:mock-prev',
+    signature: 'ed25519:MOCK_SIGNATURE_'+Math.random().toString(36).slice(2,9)
+  };
+  document.getElementById('logOut').textContent = JSON.stringify(entry, null, 2);
+}
+
+function downloadHTML(){
+  const blob = new Blob([document.documentElement.outerHTML], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'multimodal-duress-auth-proposal.html'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+</script>
+
+</body>
+</html>
